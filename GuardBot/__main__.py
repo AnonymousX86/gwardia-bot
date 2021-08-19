@@ -29,6 +29,7 @@ if __name__ == '__main__':
         # A: https://discordpy.readthedocs.io/en/latest/api.html#discord.Intents
         intents=Intents(
             guilds=True,
+            guild_messages=True,
             guild_reactions=True,
             members=True,
             reactions=True
