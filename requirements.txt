@@ -3,3 +3,4 @@ discord-py-slash-command
 rich
 python-dotenv
 apscheduler
+sqlalchemy
