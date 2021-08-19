@@ -1,10 +1,11 @@
 # -*- coding: utf-8 -*-
-from discord import Embed, Color
+from asyncio import TimeoutError
+from typing import Optional
+
+from discord import Embed, Color, Message
 from discord.ext.commands import Cog
-from discord_slash import SlashContext, ComponentContext
+from discord_slash import SlashContext
 from discord_slash.cog_ext import cog_slash
-from discord_slash.model import ButtonStyle
-from discord_slash.utils.manage_components import create_actionrow, create_button, wait_for_component
 
 from . import GUILD_IDS, PRIMARY_COLOR
 
@@ -26,23 +27,48 @@ class Birthday(Cog):
                 color=Color(PRIMARY_COLOR)
             ))
         else:
-            action_row = create_actionrow(
-                create_button(
-                    style=ButtonStyle.green,
-                    label='Dodaj/zmień',
-                    custom_id='change_bday'
-                ),
-                create_button(
-                    style=ButtonStyle.red,
-                    label='Usuń',
-                    custom_id='delete_bday'
-                )
-            )
-            await ctx.send(embed=Embed(
-                title='Zarządzanie urodzinami'
-            ), components=[action_row])
-            button_ctx: ComponentContext = await wait_for_component(self.bot, components=action_row)
-            await button_ctx.edit_origin(embed=Embed(title=f'Kliknąłeś: `{button_ctx.custom_id}`'))
+            def check(message: Message):
+                return message.channel.id == ctx.channel.id and message.author.id == ctx.author_id
+
+            await ctx.send('Uruchamiam menu...', hidden=True)
+            msg = await ctx.channel.send(embed=Embed(
+                title='Zarządzanie urodzinami',
+                description='Co chcesz zrobić?',
+                color=Color(PRIMARY_COLOR)
+            ).add_field(
+                name='Dostępne akcje',
+                value='` 1 ` Dodaj/zmień\n` 2 ` Usuń'
+            ))
+            try:
+                response: Optional[Message] = await self.bot.wait_for('message', check=check, timeout=30)
+            except TimeoutError:
+                await ctx.channel.send(embed=Embed(
+                    title=':x: Następnym razem pisz trochę szybciej',
+                    color=Color.red()
+                ))
+            else:
+                choice = response.content
+                await response.delete()
+                if choice == '1':
+                    await ctx.channel.send(embed=Embed(
+                        title=':green_circle: Dodawanie',
+                        description='Funkcja w trakcie tworzenia.',
+                        color=Color.green()
+                    ))
+                elif choice == '2':
+                    await ctx.channel.send(embed=Embed(
+                        title=':orange_circle: Usuwanie',
+                        description='Funkcja w trakcie tworzenia.',
+                        color=Color.orange()
+                    ))
+                else:
+                    await ctx.send(embed=Embed(
+                        title=':red_circle: Błąd',
+                        description=f'Nieznana opcja: `{choice}`.',
+                        color=Color.red()
+                    ))
+            finally:
+                await msg.delete()
 
 
 def setup(bot):
