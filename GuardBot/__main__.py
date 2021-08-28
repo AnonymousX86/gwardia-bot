@@ -1,5 +1,5 @@
 # -*- coding: utf-8 -*-
-from logging import basicConfig, getLogger
+from logging import basicConfig, getLogger, INFO
 from os import environ as env
 
 from discord import Intents
@@ -17,6 +17,8 @@ if __name__ == '__main__':
         handlers=[RichHandler(rich_tracebacks=True)]  # Pretty logger
     )
 
+    getLogger('sqlachemy.engine').setLevel(INFO)
+
     # Create logging objects
     log = getLogger('rich')
 
@@ -29,6 +31,7 @@ if __name__ == '__main__':
         # A: https://discordpy.readthedocs.io/en/latest/api.html#discord.Intents
         intents=Intents(
             guilds=True,
+            guild_messages=True,
             guild_reactions=True,
             members=True,
             reactions=True
